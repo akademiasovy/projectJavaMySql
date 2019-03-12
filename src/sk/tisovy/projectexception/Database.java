@@ -1,7 +1,9 @@
 package sk.tisovy.projectexception;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 public class Database {
     private final String username="klaudia";
@@ -40,6 +42,35 @@ public class Database {
         }
     }
 
+    public Person selectPersonByLastName(String lname){
+        Connection conn=getConnection();
+        try {
+            PreparedStatement stmt=conn.prepareStatement("SELECT * FROM person WHERE lname LIKE ?");
+            stmt.setString(1,lname);
+            ResultSet rs=stmt.executeQuery();
+            if(rs.next()){
+                String lastname=rs.getString("lname");
+                String fname=rs.getString("fname");
+                String pin=rs.getString("pin");
+                Date dob=rs.getDate("dob");
+
+                Person p=new Person(lastname,fname,pin,dob);
+                closeConnection(conn);
+                return p;
+            }
+            else
+            {
+                closeConnection(conn);
+                return null;
+            }
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     private void closeConnection(Connection conn){
         if(conn!=null) {
             try {
@@ -48,5 +79,28 @@ public class Database {
                 e.printStackTrace();
             }
         }
+    }
+
+    public List<Person> getAllMens(){
+        Connection conn=getConnection();
+        String query="SELECT * FROM person WHERE pin LIKE '__0%' OR pin LIKE '__1%'";
+        List<Person> persons = new ArrayList<>();
+        ResultSet rs;
+        try {
+            PreparedStatement stmt=conn.prepareStatement(query);
+            rs=stmt.executeQuery();
+            while(rs.next()){
+                String lastname=rs.getString("lname");
+                String fname=rs.getString("fname");
+                String pin=rs.getString("pin");
+                Date dob=rs.getDate("dob");
+                Person p=new Person(lastname,fname,pin,dob);
+                persons.add(p);
+            }
+            closeConnection(conn);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return persons;
     }
 }
